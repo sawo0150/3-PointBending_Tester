@@ -1,0 +1,6 @@
+# Request (요청)
+std_msgs/String config_name
+---
+# Response (응답)
+bool success
+string log_file_path
