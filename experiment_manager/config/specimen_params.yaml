@@ -1,0 +1,13 @@
+# experiment_manager_node의 파라미터
+experiment_manager_node:
+  ros__parameters:
+    
+    # [중요] 시편 정보 (단위: mm)
+    specimen_b: 12.7  # (b) 시편 폭 (mm)
+    specimen_h: 2.8   # (h 또는 d) 시편 두께/높이 (mm)
+    span_l: 100.0     # (L) 지지대 간 거리 (mm)
+
+    # [중요] 데이터 저장 경로 (홈 디렉토리 기준)
+    # 예: /home/wosasa/bending_test_data
+    # '~/bending_test_data' 처럼 물결표(~)를 사용하세요.
+    csv_save_directory: "/home/wosasa/Desktop/3-Point_Bending/experimentsData"
