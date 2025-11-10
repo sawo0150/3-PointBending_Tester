@@ -30,6 +30,7 @@ setup(
     entry_points={
         'console_scripts': [# '실행명령어 = 패키지명.파일이름:main'
             'arduino_serial_node = hardware_interface.arduino_serial_node:main',
+            'arduino_serialPump_node = hardware_interface.arduino_serialPump_node:main',
         ],
     },
 )
