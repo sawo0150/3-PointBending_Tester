@@ -15,7 +15,7 @@ def generate_launch_description():
     # [중요] 픽셀-밀리미터 변환 상수 (보정 필요)
     # 예: 카메라 앞에서 1mm 자를 대고 몇 픽셀인지 확인
     # 1mm에 20 픽셀이라면 -> 1 / 20 = 0.05
-    pixel_to_mm_ratio = 0.05 
+    pixel_to_mm_ratio = 0.14534883
 
     return LaunchDescription([
         Node(

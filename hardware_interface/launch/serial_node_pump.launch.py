@@ -16,7 +16,7 @@ def generate_launch_description():
                 
                 # [!!! 중요 !!!] 이 값을 보정해야 합니다.
                 # 아래 'calibration_factor 찾는 법' 참고
-                {'calibration_factor': 0.000185} # 예시 값
+                {'calibration_factor': 0.00010476689} # 예시 값
             ]
         )
     ])

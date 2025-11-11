@@ -35,6 +35,7 @@ class DeflectionTrackerNode(Node):
 
         # --- 파라미터 값 가져오기 ---
         cam_index = self.get_parameter('cam_index').get_parameter_value().integer_value
+        self.cam_index = cam_index # [추가] 재연결을 위해 cam_index를 self에 저장
         self.target_width = self.get_parameter('target_width').get_parameter_value().integer_value
         roi_rect = self.get_parameter('roi_rect').get_parameter_value().integer_array_value
         hsv_lower = self.get_parameter('hsv_lower').get_parameter_value().integer_array_value
@@ -55,7 +56,7 @@ class DeflectionTrackerNode(Node):
                                   min_contour_area=min_area)
 
         # --- OpenCV 카메라 초기화 (cv2.VideoCapture) ---
-        self.cap = cv2.VideoCapture(cam_index)
+        self.cap = cv2.VideoCapture(self.cam_index) # [수정] self.cam_index 사용
         if not self.cap.isOpened():
             self.get_logger().error(f"Cannot open camera index {cam_index}")
             rclpy.shutdown()
@@ -83,9 +84,31 @@ class DeflectionTrackerNode(Node):
         """ 메인 루프. 카메라 프레임 읽기, 추적, 발행, 시각화를 수행 """
         
         ret, frame = self.cap.read()
+
+        # --- [수정] Fallback 로직 ---
+
         if not ret:
-            self.get_logger().warn("Failed to read frame from camera.")
-            return
+            self.get_logger().warn("Failed to read frame. Attempting to reconnect camera...")
+            try:
+                # 1. 기존 캡처 객체 해제
+                self.cap.release()
+            except Exception as e:
+                self.get_logger().warn(f"Error releasing old camera capture: {e}")
+            
+            # 2. 카메라 재연결 시도
+            self.cap = cv2.VideoCapture(self.cam_index)
+            
+            if not self.cap.isOpened():
+                self.get_logger().error(f"Failed to reconnect camera. Will retry next tick.")
+                return # 이번 프레임은 포기, 다음 콜백에서 다시 시도
+            else:
+                self.get_logger().info("Successfully reconnected to camera.")
+                # 재연결 후 첫 프레임 읽기
+                ret, frame = self.cap.read()
+                if not ret:
+                    self.get_logger().warn("Failed to read frame even after reconnect. Skipping frame.")
+                    return
+        # --- Fallback 로직 끝 ---
 
         # 1. 프레임 리사이즈
         original_h, original_w = frame.shape[:2]
