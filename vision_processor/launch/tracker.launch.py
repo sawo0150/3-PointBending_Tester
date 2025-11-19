@@ -10,7 +10,7 @@ def generate_launch_description():
     roi_rect = [295, 100, 70, 200]  # [x, y, w, h]
     hsv_lower = [0, 0, 0]          # [h, s, v]
     hsv_upper = [180, 255, 70]     # [h, s, v]
-    min_area = 50
+    min_area = 100
     
     # [중요] 픽셀-밀리미터 변환 상수 (보정 필요)
     # 예: 카메라 앞에서 1mm 자를 대고 몇 픽셀인지 확인

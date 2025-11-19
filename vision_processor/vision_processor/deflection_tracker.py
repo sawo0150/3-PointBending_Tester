@@ -8,7 +8,7 @@ class DotTracker:
     가장 큰 객체를 추적하는 클래스.
     """
     
-    def __init__(self, roi_rect, color_lower, color_upper, min_contour_area=30):
+    def __init__(self, roi_rect, color_lower, color_upper, min_contour_area=10):
         """
         트래커를 초기화합니다.
         
@@ -72,22 +72,24 @@ class DotTracker:
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         
         found_center = None
-        largest_contour = None # 디버그 시각화를 위해 초기화
+        target_contour = None # [수정] 디버그 시각화를 위해 변수명 변경 (largest -> target)
         
         if contours:
-            # 5. 찾은 윤곽선 중 가장 면적이 큰 것을 선택
-            largest_contour = max(contours, key=cv2.contourArea)
-            area = cv2.contourArea(largest_contour)
-            self.current_area = area # [추가] 현재 면적값 저장
+            
+            # 5. [수정] min_area보다 큰 '유효한' 윤곽선들만 필터링
+            valid_contours = [c for c in contours if cv2.contourArea(c) > self.min_area]
 
-            # 6. 면적이 최소 기준(노이즈 필터)보다 큰 경우
-            if area > self.min_area:
-                # 7. [수정] 윤곽선에서 Y좌표가 가장 큰(가장 아래쪽) 점 찾기
-                # largest_contour[largest_contour[:, :, 1].argmax()]는
-                # Y값이 최대인 점 [[x, y]]를 반환합니다.
-                # [0]을 붙여 [x, y]로, tuple()로 감싸 (x, y)로 만듭니다.
-                bottom_point_roi = tuple(largest_contour[largest_contour[:, :, 1].argmax()][0])
+            if valid_contours:
+                # 6. [수정] 유효한 것들 중 '가장 아래쪽(Y 최대값)'에 있는 윤곽선 선택
+                # c[:, :, 1].max()는 윤곽선을 구성하는 점들 중 Y값의 최대값을 의미함
+                target_contour = max(valid_contours, key=lambda c: c[:, :, 1].max())
                 
+                self.current_area = cv2.contourArea(target_contour)
+
+                # 7. 선택된 윤곽선 내에서 가장 아래쪽 점 좌표 추출
+                bottom_point_roi = tuple(target_contour[target_contour[:, :, 1].argmax()][0])
+
+
                 # cX_roi, cY_roi는 *ROI 내부* 좌표
                 cX_roi, cY_roi = bottom_point_roi
                 
@@ -103,9 +105,12 @@ class DotTracker:
             viz_roi_debug = roi_frame.copy()
             cv2.drawContours(viz_roi_debug, contours, -1, (255, 0, 0), 1) # 모든 윤곽선 (파란색)
             
-            if largest_contour is not None and cv2.contourArea(largest_contour) > self.min_area:
+            # if largest_contour is not None and cv2.contourArea(largest_contour) > self.min_area:
+            # [수정] target_contour가 존재하면 초록색으로 그림
+            if target_contour is not None:
                 # 유효한 가장 큰 윤곽선 (초록색)
-                cv2.drawContours(viz_roi_debug, [largest_contour], 0, (0, 255, 0), 2)
+                # cv2.drawContours(viz_roi_debug, [largest_contour], 0, (0, 255, 0), 2)
+                cv2.drawContours(viz_roi_debug, [target_contour], 0, (0, 255, 0), 2)
 
             debug_images = {
                 'ROI_Debug': viz_roi_debug, # 윤곽선이 그려진 ROI
@@ -156,7 +161,7 @@ if __name__ == "__main__":
     # 검은색은 V(명도)가 매우 낮은 영역입니다.
     LOWER_BLACK_HSV = [0, 0, 0]      # 하한값
     UPPER_BLACK_HSV = [180, 255, 70] # 상한값 (V를 50 이하로 제한)
-    MIN_AREA = 50 # 최소 50 픽셀 이상이어야 점으로 인식 (노이즈 제거)
+    MIN_AREA = 10 # 최소 50 픽셀 이상이어야 점으로 인식 (노이즈 제거)
     # ------------------
 
     # 1. DotTracker 클래스 객체 생성

@@ -29,7 +29,7 @@ class DeflectionTrackerNode(Node):
         # 런치 파일에서 리스트로 전달: [h, s, v]
         self.declare_parameter('hsv_lower', [0, 0, 0])
         self.declare_parameter('hsv_upper', [180, 255, 70])
-        self.declare_parameter('min_area', 50)
+        self.declare_parameter('min_area', 10)
         # [핵심] pixel -> mm 변환 비례 상수
         self.declare_parameter('pixel_to_mm_ratio', 0.05) # 예: 1 픽셀 = 0.05 mm
 
